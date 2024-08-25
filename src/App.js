@@ -3,16 +3,17 @@ import io from 'socket.io-client';
 import './App.css';
 import { FiMicOff, FiVideoOff, FiCamera } from 'react-icons/fi';
 
-const socket = io.connect('http://localhost:5000');
+const socket = io.connect('https://video-calling-backend-1.onrender.com'); // Replace with your backend URL
 
 function App() {
-  const userVideo = useRef();
-  const peerVideo = useRef();
-  const peerRef = useRef();
+  const userVideo = useRef(null);
+  const peerVideo = useRef(null);
+  const peerRef = useRef(null);
   const [isCallStarted, setIsCallStarted] = useState(false);
   const [userStream, setUserStream] = useState(null);
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const configuration = {
     iceServers: [
@@ -25,20 +26,29 @@ function App() {
       const peer = peerRef.current;
       if (!peer) return;
 
-      if (data.type === 'offer') {
-        await peer.setRemoteDescription(new RTCSessionDescription(data));
-        const answer = await peer.createAnswer();
-        await peer.setLocalDescription(answer);
-        socket.emit('signal', peer.localDescription);
-      } else if (data.type === 'answer') {
-        await peer.setRemoteDescription(new RTCSessionDescription(data));
-      } else if (data.candidate) {
-        try {
+      try {
+        if (data.type === 'offer') {
+          if (peer.signalingState === 'stable') {
+            throw new Error('Peer connection is not in the right state.');
+          }
+          await peer.setRemoteDescription(new RTCSessionDescription(data));
+          const answer = await peer.createAnswer();
+          await peer.setLocalDescription(answer);
+          socket.emit('signal', peer.localDescription);
+        } else if (data.type === 'answer') {
+          if (peer.signalingState === 'stable') {
+            throw new Error('Peer connection is not in the right state.');
+          }
+          await peer.setRemoteDescription(new RTCSessionDescription(data));
+        } else if (data.candidate) {
+          if (peer.signalingState === 'closed') {
+            throw new Error('Peer connection is closed.');
+          }
           const candidate = new RTCIceCandidate(data.candidate);
           await peer.addIceCandidate(candidate);
-        } catch (error) {
-          console.error('Error adding received ICE candidate', error);
         }
+      } catch (error) {
+        console.error('Error in signaling process:', error);
       }
     });
 
@@ -49,10 +59,16 @@ function App() {
 
   const startCall = () => {
     setIsCallStarted(true);
+    setLoading(true);
 
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then(stream => {
-        userVideo.current.srcObject = stream;
+        if (userVideo.current) {
+          userVideo.current.srcObject = stream;
+        } else {
+          console.error('User video element not found');
+        }
+
         setUserStream(stream);
 
         if (peerRef.current) {
@@ -63,7 +79,11 @@ function App() {
         peerRef.current = peer;
 
         peer.ontrack = (event) => {
-          peerVideo.current.srcObject = event.streams[0];
+          if (peerVideo.current) {
+            peerVideo.current.srcObject = event.streams[0];
+          } else {
+            console.error('Peer video element not found');
+          }
         };
 
         peer.onicecandidate = (event) => {
@@ -78,9 +98,12 @@ function App() {
           peer.setLocalDescription(offer);
           socket.emit('signal', offer);
         });
+
+        setLoading(false);
       })
       .catch(error => {
-        console.error('Error accessing media devices.', error);
+        console.error('Error accessing media devices:', error);
+        setLoading(false);
       });
   };
 
@@ -96,20 +119,28 @@ function App() {
     }
 
     setIsCallStarted(false);
-    peerVideo.current.srcObject = null;
-    userVideo.current.srcObject = null;
+    if (peerVideo.current) {
+      peerVideo.current.srcObject = null;
+    }
+    if (userVideo.current) {
+      userVideo.current.srcObject = null;
+    }
   };
 
   const toggleMic = () => {
     const enabled = !micEnabled;
     setMicEnabled(enabled);
-    userStream.getAudioTracks()[0].enabled = enabled;
+    if (userStream) {
+      userStream.getAudioTracks()[0].enabled = enabled;
+    }
   };
 
   const toggleCamera = () => {
     const enabled = !cameraEnabled;
     setCameraEnabled(enabled);
-    userStream.getVideoTracks()[0].enabled = enabled;
+    if (userStream) {
+      userStream.getVideoTracks()[0].enabled = enabled;
+    }
   };
 
   const nextCall = () => {
@@ -118,16 +149,19 @@ function App() {
   };
 
   return (
-    <>
+    <div className="app">
       <div className="logo">
         <h2>Hello-Friend</h2>
         <span>by Sayed Soeb</span>
       </div>
       <div className="container">
-        <div className="video-container">
-          <video ref={userVideo} autoPlay muted></video>
-          <video ref={peerVideo} autoPlay></video>
-        </div>
+        {loading && <div className="loader">Searching user...</div>}
+        {!loading && (
+          <div className="video-container">
+            <video ref={userVideo} autoPlay muted playsInline></video>
+            <video ref={peerVideo} autoPlay playsInline></video>
+          </div>
+        )}
         <div className="button-container">
           {!isCallStarted && (
             <button onClick={startCall}>Start</button>
@@ -149,7 +183,7 @@ function App() {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
