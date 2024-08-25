@@ -1,24 +1,27 @@
+/* General styles */
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Roboto', sans-serif;
   margin: 0;
   padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f0f0f0;
+  background-color: #121212;
+  color: #E0E0E0;
 }
 
 .container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 800px;
+  text-align: center;
+  width: 100vw;
   padding: 20px;
-  background-color: #fff;
+  box-sizing: border-box;
+  background-color: #1E1E1E;
   border-radius: 10px;
-  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.7);
+  height: 90vh;
+  min-height: 85vh;
+  position: relative; /* For positioning button icons */
 }
 
 video {
@@ -27,48 +30,131 @@ video {
   height: auto;
   margin-bottom: 20px;
   border-radius: 10px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.7);
+  position: relative; /* For positioning button icons */
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  margin-top: 20px;
+}
+
+.logo h2 {
+  font-family: 'Oswald', sans-serif; /* Bold, modern font */
+  font-size: 36px; /* Prominent size */
+  font-weight: 700; /* Bold for impact */
+  color: #00E676; /* Neon green for a vibrant look */
+  text-shadow: 0 0 10px rgba(0, 230, 118, 0.8); /* Neon glow effect */
+  margin: 0; /* Remove default margin */
+}
+
+.logo span {
+  font-family: 'Roboto', sans-serif; /* Clean sans-serif for subtitle */
+  font-size: 18px;
+  color: #B0BEC5;
+  font-style: italic;
+  margin-top: 5px; /* Space between title and subtitle */
+}
+
+/* Button and icon styles remain unchanged */
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  position: relative; /* For positioning icons */
 }
 
 button {
-  width: 80%;
-  max-width: 200px;
-  padding: 10px;
-  margin: 10px 0;
+  width: 60px;
+  height: 60px;
+  margin: 10px;
   border: none;
-  border-radius: 5px;
-  background-color: #007bff;
+  border-radius: 50%;
+  background-color: #FF5722;
   color: white;
-  font-size: 16px;
+  font-size: 24px;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: #FFC107;
 }
 
 button:active {
-  transform: scale(0.98);
+  transform: scale(0.95);
 }
 
 button:focus {
   outline: none;
 }
 
+/* Icon container styles */
+.icon-container {
+  display: flex;
+  gap: 10px;
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.video-container:hover .icon-container,
+.icon-container.visible {
+  opacity: 1;
+}
+
+.buttons {
+  display: flex;
+}
+
+/* Media queries */
 @media (min-width: 600px) {
   .container {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .video-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    position: relative;
   }
 
   video {
-      width: 45%;
-      max-width: none;
+    width: 45%;
+    max-height: 65vh;
+    max-width: none;
   }
 
   button {
-      width: 45%;
+    width: 70px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 600px) {
+  .icon-container {
+    bottom: -70px; /* Adjust this value if needed */
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Ensure the icon container is visible on mobile */
+  .video-container:hover .icon-container,
+  .icon-container.visible {
+    opacity: 1;
   }
 }
