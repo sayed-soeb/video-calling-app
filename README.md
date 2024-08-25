@@ -25,4 +25,4 @@ Welcome to **Hello-Friend**, a sleek and modern video calling application design
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/hello-friend-video-calling-app.git
+   git clone https://github.com/sayed-soeb/video-calling-app.git
